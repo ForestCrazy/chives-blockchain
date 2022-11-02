@@ -141,6 +141,8 @@ class HarvesterAPI:
                                     ),
                                 )
                             )
+                if hasattr(plot_info.prover, 'flush_cache'):
+                    plot_info.prover.flush_cache()
                 return responses
             except Exception as e:
                 self.harvester.log.error(f"Unknown error: {e}")
