@@ -14,6 +14,9 @@ from chives.plotting.cache import Cache, CacheEntry
 from chives.plotting.util import PlotInfo, PlotRefreshEvents, PlotRefreshResult, PlotsRefreshParameter, get_plot_filenames
 from chives.util.generator_tools import list_to_batches
 
+def is_remote(filename: str) -> bool:
+    return filename.find("--remoteplot--") != -1
+
 log = logging.getLogger(__name__)
 
 
@@ -278,12 +281,13 @@ class PlotManager:
                     # TODO: consider checking if the file was just written to (which would mean that the file is still
                     # being copied). A segfault might happen in this edge case.
 
-                    if prover.get_size() >= 30 and stat_info.st_size < 0.98 * expected_size:
-                        log.warning(
-                            f"Not farming plot {file_path}. Size is {stat_info.st_size / (1024 ** 3)} GiB, but expected"
-                            f" at least: {expected_size / (1024 ** 3)} GiB. We assume the file is being copied."
-                        )
-                        return None
+                    if not is_remote(str(file_path)):
+                        if prover.get_size() >= 30 and stat_info.st_size < 0.98 * expected_size:
+                            log.warning(
+                                f"Not farming plot {file_path}. Size is {stat_info.st_size / (1024 ** 3)} GiB, but expected"
+                                f" at least: {expected_size / (1024 ** 3)} GiB. We assume the file is being copied."
+                            )
+                            return None
 
                     cache_entry = CacheEntry.from_disk_prover(prover)
                     self.cache.update(file_path, cache_entry)
